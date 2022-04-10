@@ -19,12 +19,11 @@ interface Prod {
 }
 
 function LoadedProducts(
-    ...args: any
-    // { navigation }: RootTabScreenProps<'LoadedProducts'>,
+    { navigation }: RootTabScreenProps<'LoadedProducts'>,
     // { codigo, codigo_barras, descricao, desc_unidade }: Prod,
 ) {
 
-    var [products, setProducts] = useState([{ codigo: "string", codigo_barras: "string", descricao: "string", desc_unidade: "string" }])
+    var [products, setProducts] = useState([])
     var [productsLenght, setProductsLenght] = useState(0)
 
 
@@ -44,8 +43,8 @@ function LoadedProducts(
                             const dados = rows._array as unknown
                             const newDados = dados as Prod[]
 
+                            // @ts-ignore
                             setProducts(newDados)
-
                             setProductsLenght(newDados.length)
                         }
                     )
@@ -60,13 +59,15 @@ function LoadedProducts(
                 style={styles.productsContainer}
                 onPress={
                     () => {
-                        /*setProductData({
-                            codigo: item.codigo,
-                            codigo_barras: item.codigo_barras,
-                            descricao: item.descricao,
-                            desc_unidade: item.desc_unidade,
-                        })*/
-                        // navigation.navigate('Modal')
+                        navigation.navigate(
+                            'Modal',
+                            {
+                                codigo: item.codigo,
+                                codigo_barras: item.codigo_barras,
+                                descricao: item.descricao,
+                                desc_unidade: item.desc_unidade
+                            }
+                        )
                     }
                 }
             >
@@ -115,7 +116,7 @@ function LoadedProducts(
                                                             const acessFolder = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
 
                                                             if (acessFolder.granted) {
-                                                                const fortFolderUri = await FileSystem.StorageAccessFramework.getUriForDirectoryInRoot(acessFolder.directoryUri)
+                                                                // const fortFolderUri = await FileSystem.StorageAccessFramework.getUriForDirectoryInRoot(acessFolder.directoryUri)
 
                                                                 await FileSystem.StorageAccessFramework.createFileAsync(
                                                                     acessFolder.directoryUri,
@@ -129,10 +130,8 @@ function LoadedProducts(
                                                                         )
                                                                     }
                                                                 )
-
                                                                 
                                                             }
-
                                                         }
                                                     )
                                                 )
@@ -145,7 +144,7 @@ function LoadedProducts(
                         </TouchableOpacity>
 
                         <TouchableOpacity style={{ width: 125, backgroundColor: "#222", display: 'flex', padding: 8, alignItems: 'center', }} onPress={() => { }}>
-                            <Text>Impotar Novo CSV</Text>
+                            <Text>Importar Novo CSV</Text>
                         </TouchableOpacity>
 
                     </View>
