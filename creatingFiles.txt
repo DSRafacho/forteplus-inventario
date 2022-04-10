@@ -1,0 +1,2 @@
+var listaCaminhos = caminho => fs.readdir(caminho, (err, paths) => console.log(paths) )
+var criaDiretórios = dir => fs.mkdirSync(dir)
