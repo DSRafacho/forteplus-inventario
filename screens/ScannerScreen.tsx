@@ -54,27 +54,6 @@ export default function App() {
 
     // @ts-ignore
     setHasPermission(permissionCamera === GRANTED);
-
-    /* switch (permissionCamera) {
-      case GRANTED:
-        // @ts-ignore
-        setHasPermission(GRANTED);
-        break;
-
-      case null:
-        // @ts-ignore
-        setHasPermission(null);
-        break;
-
-      // @ts-ignore
-      case false:
-        // @ts-ignore
-        setHasPermission(false);
-        break;
-
-      default:
-        break;
-    } */
   }
 
   useEffect(
@@ -102,7 +81,7 @@ export default function App() {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: Colors.dark.background,
+        backgroundColor: Colors[colorScheme].background,
       },
 
       title: {

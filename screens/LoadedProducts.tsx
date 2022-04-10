@@ -6,9 +6,10 @@ import { connect } from "react-redux";
 import { RootTabScreenProps } from '../types';
 import { Button } from 'react-native';
 import { selectAllProduts } from '../database/sql_runner';
-import db from '../database/db';
+import db, { openDatabase } from '../database/db';
 import querys from '../database/querys';
 import read_file from '../system/read_file';
+import * as FileSystem from 'expo-file-system';
 
 interface Prod {
     codigo: string
@@ -23,7 +24,8 @@ function LoadedProducts(
     // { codigo, codigo_barras, descricao, desc_unidade }: Prod,
 ) {
 
-    var [products, setProducts] = useState([])
+    var [products, setProducts] = useState([{ codigo: "string", codigo_barras: "string", descricao: "string", desc_unidade: "string" }])
+    var [productsLenght, setProductsLenght] = useState(0)
 
 
     /*
@@ -34,7 +36,6 @@ function LoadedProducts(
 
     useEffect(
         () => {
-            // read_file()
             db.transaction(
                 tx => {
                     tx.executeSql(
@@ -42,8 +43,10 @@ function LoadedProducts(
                         (_, { rows }) => {
                             const dados = rows._array as unknown
                             const newDados = dados as Prod[]
-                            // @ts-ignore
+
                             setProducts(newDados)
+
+                            setProductsLenght(newDados.length)
                         }
                     )
                 }
@@ -76,14 +79,79 @@ function LoadedProducts(
     }
 
     const noProductsView = (
-            <View style={styles.noProductsContent}>
-                <Text style={{ fontSize: 30, textAlign: 'center', fontWeight: 'bold' }}>Ooops, nenhum produto foi encontrado...</Text>
-                <Text style={{ fontSize: 18, marginTop: 32 }}>Verifique se o arquivo produtos.csv está na pasta 'Forteplus' de seu celular ou se a pasta correta foi selecionada.</Text>
-            </View>
+        <View style={styles.noProductsContent}>
+            <Text style={{ fontSize: 30, textAlign: 'center', fontWeight: 'bold' }}>Ooops, nenhum produto foi encontrado...</Text>
+            <Text style={{ fontSize: 18, marginTop: 32 }}>Verifique se o arquivo produtos.csv está na pasta 'Forteplus' de seu celular ou se a pasta correta foi selecionada.</Text>
+        </View>
     )
 
     return (
         <View style={styles.container}>
+            {
+                products.length > 0
+                    ? <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', paddingRight: 20, paddingTop: 20 }}>
+
+                        <TouchableOpacity style={{ width: 115, backgroundColor: "#888", display: 'flex', padding: 8, alignItems: 'center', }}
+                            onPress={
+                                async () => {
+                                    await openDatabase()
+                                        .then(
+                                            db =>
+                                                db.transaction(
+                                                    tx => tx.executeSql(querys.SELECT_ALL(), [],
+                                                        async (tx_, results) => {
+                                                            var newCsvContent = ""
+                                                            var i = 0
+
+                                                            newCsvContent += "codigo,descricao,codigo_barras,desc_unidade\n"
+
+                                                            results.rows._array.forEach(
+                                                                (data: Prod) => {
+                                                                    newCsvContent += `${data.codigo},${data.descricao},${data.codigo_barras},${data.desc_unidade}\n`
+                                                                    i++
+                                                                }
+                                                            )
+
+                                                            const acessFolder = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync()
+
+                                                            if (acessFolder.granted) {
+                                                                const fortFolderUri = await FileSystem.StorageAccessFramework.getUriForDirectoryInRoot(acessFolder.directoryUri)
+
+                                                                await FileSystem.StorageAccessFramework.createFileAsync(
+                                                                    acessFolder.directoryUri,
+                                                                    'produtos-exportados',
+                                                                    'text/csv',
+                                                                ).then(
+                                                                    async SAF_URI => {
+                                                                        await FileSystem.StorageAccessFramework.writeAsStringAsync(
+                                                                            SAF_URI,
+                                                                            newCsvContent,
+                                                                        )
+                                                                    }
+                                                                )
+
+                                                                
+                                                            }
+
+                                                        }
+                                                    )
+                                                )
+                                        )
+                                    return
+                                }
+                            }
+                        >
+                            <Text>Exportar Dados</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{ width: 125, backgroundColor: "#222", display: 'flex', padding: 8, alignItems: 'center', }} onPress={() => { }}>
+                            <Text>Impotar Novo CSV</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                    : <></>
+            }
+            <Text style={{ color: "#222", fontSize: 20, textAlign: 'center', marginVertical: 15 }}>Produtos carregados: {productsLenght}</Text>
             {
                 products.length > 0
                     ? <FlatList
